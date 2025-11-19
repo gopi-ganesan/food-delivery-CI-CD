@@ -6,9 +6,9 @@ pipeline {
             AWS_REGION = "us-east-1"
             ECR_REGISTRY = "${AWS_ACCOUT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-            BACKEND_REPO = "food-repo-backend" // the is ecr repository name
-            FRONTEND_REPO = "food-repo-frontend"
-            ADMIN_REPO = "food-repo-admin"
+            BACKEND_REPO = "backend/food-ewb" // the is ecr repository name
+            FRONTEND_REPO="frontend/food-ewb"
+            ADMIN_REPO="admin/food-ewb"
 
             IMAGE_TAG = "${BUILD_NUMBER}"
 
@@ -17,14 +17,14 @@ pipeline {
             LOCAL_ADMIN_IMAGE = "admin:${IMAGE_TAG}"
 
             ECS_CLUSTER_NAME = "food-delivery-cluster" // ecs cluster name
-            ECS_BACKEND_SERVICE = "food-service"
+            ECS_BACKEND_SERVICE = "food-task-service-eia1kg85"
 
     }
 
     stages {
         stage('git clone repo') {
             steps {
-                git '',
+                git 'https://github.com/gopi-ganesan/food-delivery-CI-CD.git',
                 branch: 'main',
                 credentialsId: 'github-token'
             }
