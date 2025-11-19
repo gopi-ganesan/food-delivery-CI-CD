@@ -44,7 +44,7 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 echo 'Logging in to Amazon ECR...'
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cre']]) {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws']]) {
                     sh """
                         aws ecr get-login-password --region ${AWS_REGION} \
                         | docker login --username AWS --password-stdin ${ECR_REGISTRY}
@@ -72,7 +72,7 @@ pipeline {
         stage('Deploy to ECS') {
             steps {
                 echo 'Deploying Services to ECS...'
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cre']]) {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws']]) {
                     sh """
                         aws ecs update-service \
                             --cluster ${ECS_CLUSTER_NAME} \
