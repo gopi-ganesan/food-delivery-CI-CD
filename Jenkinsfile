@@ -2,31 +2,35 @@ pipeline {
     agent any
 
     environment {
-            AWS_ACCOUT_ID = "562404438689"
-            AWS_REGION = "us-east-1"
-            ECR_REGISTRY = "${AWS_ACCOUT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        AWS_ACCOUNT_ID   = "562404438689"
+        AWS_REGION       = "us-east-1"
+        ECR_REGISTRY     = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-            BACKEND_REPO = "backend/food-ewb" // the is ecr repository name
-            FRONTEND_REPO="frontend/food-ewb"
-            ADMIN_REPO="admin/food-ewb"
+        BACKEND_REPO    = "backend/food-ewb"
+        FRONTEND_REPO   = "frontend/food-ewb"
+        ADMIN_REPO      = "admin/food-ewb"
 
-            IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG        = "${BUILD_NUMBER}"
 
-            LOCAL_BACKEND_IMAGE = "backend:${IMAGE_TAG}" // the is local image name docker image name
-            LOCAL_FRONTEND_IMAGE = "frontend:${IMAGE_TAG}"
-            LOCAL_ADMIN_IMAGE = "admin:${IMAGE_TAG}"
+        LOCAL_BACKEND_IMAGE  = "backend:${IMAGE_TAG}"
+        LOCAL_FRONTEND_IMAGE = "frontend:${IMAGE_TAG}"
+        LOCAL_ADMIN_IMAGE    = "admin:${IMAGE_TAG}"
 
-            ECS_CLUSTER_NAME = "food-delivery-cluster" // ecs cluster name
-            ECS_BACKEND_SERVICE = "food-task-service-eia1kg85"
-
+        ECS_CLUSTER_NAME      = "food-delivery-cluster"
+        ECS_BACKEND_SERVICE   = "food-backend-service"
+        ECS_FRONTEND_SERVICE  = "food-frontend-service"
+        ECS_ADMIN_SERVICE     = "food-admin-service"
     }
 
     stages {
-        stage('git clone repo') {
+
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/gopi-ganesan/food-delivery-CI-CD.git',
-                branch: 'main',
-                credentialsId: 'github-token'
+                git(
+                    url: 'https://github.com/gopi-ganesan/food-delivery-CI-CD.git',
+                    branch: 'main',
+                    credentialsId: 'github-token'
+                )
             }
         }
 
@@ -37,24 +41,25 @@ pipeline {
             }
         }
 
-        stage('ecr login'){
+        stage('Login to ECR') {
             steps {
                 echo 'Logging in to Amazon ECR...'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cre']]) {
                     sh """
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        aws ecr get-login-password --region ${AWS_REGION} \
+                        | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     """
                 }
             }
         }
 
-        stage('push to ecr '){  // push docker images to ecr 
-            stage{
-                echo 'Pushing Docker Images to ECR...'
+        stage('Push Docker Images to ECR') {
+            steps {
+                echo 'Pushing Images...'
                 sh """
                     docker tag ${LOCAL_BACKEND_IMAGE} ${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG}
                     docker push ${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG}
-                    
+
                     docker tag ${LOCAL_FRONTEND_IMAGE} ${ECR_REGISTRY}/${FRONTEND_REPO}:${IMAGE_TAG}
                     docker push ${ECR_REGISTRY}/${FRONTEND_REPO}:${IMAGE_TAG}
 
@@ -64,25 +69,25 @@ pipeline {
             }
         }
 
-        stage('Deploy to ECS') {  // deploy to amazon ecs
+        stage('Deploy to ECS') {
             steps {
-                echo 'Deploying to amazon ECS...'
+                echo 'Deploying Services to ECS...'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cre']]) {
                     sh """
-                    aws ecs update-sevice \
-                        --cluster ${ECS_CLUSTER_NAME} \  
-                        --service ${ECS_BACKEND_SERVICE} \
-                        --force-new-deployment
+                        aws ecs update-service \
+                            --cluster ${ECS_CLUSTER_NAME} \
+                            --service ${ECS_BACKEND_SERVICE} \
+                            --force-new-deployment
 
-                    aws ecs update-sevice \
-                        --cluster ${ECS_CLUSTER_NAME} \
-                        --service ${ECS_FRONTEND_SERVICE} \
-                        --force-new-deployment
+                        aws ecs update-service \
+                            --cluster ${ECS_CLUSTER_NAME} \
+                            --service ${ECS_FRONTEND_SERVICE} \
+                            --force-new-deployment
 
-                    aws ecs update-sevice \
-                        --cluster ${ECS_CLUSTER_NAME} \
-                        --service ${ECS_ADMIN_SERVICE} \
-                        --force-new-deployment
+                        aws ecs update-service \
+                            --cluster ${ECS_CLUSTER_NAME} \
+                            --service ${ECS_ADMIN_SERVICE} \
+                            --force-new-deployment
                     """
                 }
             }
