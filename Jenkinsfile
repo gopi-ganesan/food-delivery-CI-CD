@@ -10,7 +10,7 @@ pipeline {
         FRONTEND_REPO   = "frontend/food-ewb"
         ADMIN_REPO      = "admin/food-ewb"
 
-        IMAGE_TAG        = "${BUILD_NUMBER}"
+        IMAGE_TAG        = "latest"
 
         LOCAL_BACKEND_IMAGE  = "backend:${IMAGE_TAG}"
         LOCAL_FRONTEND_IMAGE = "frontend:${IMAGE_TAG}"
@@ -19,7 +19,7 @@ pipeline {
         ECS_CLUSTER_NAME      = "food-delivery-cluster"
         ECS_BACKEND_SERVICE   = "food-backend-service"
         ECS_FRONTEND_SERVICE  = "food-frontend-service"
-        ECS_ADMIN_SERVICE     = "food-admin-service"
+        ECS_ADMIN_SERVICE     = "food-admin-servic "
     }
 
     stages {
